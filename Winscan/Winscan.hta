@@ -1,0 +1,129 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<HTML>
+	<HEAD>
+		<META http-equiv = "Content-Type" content = "text/html;charset=utf-8">
+		<TITLE>Window Scanner - Help</TITLE>
+	</HEAD>
+
+	<BODY BGCOLOR = "FFFFE1">
+		<B>Window Scanner - Help</B><BR>
+		<BR>
+		<B>Topics</B>
+		<UL TYPE = square>
+		<LI><A HREF = "#WS"> Window Scanner </A>
+		<LI><A HREF = "#FAW"> Finding a window </A>
+		<LI><A HREF = "#SO"> Search Options </A>
+		<LI><A HREF = "#SR"> Search Results </A>
+		<LI><A HREF = "#SAOCI"> Searching and/or Copying Information </A>
+		<LI><A HREF = "#CAOVWP"> Changing and/or Viewing Window Properties </A>
+		<LI><A HREF = "#EW"> Excluding Windows </A>
+		</UL>
+
+		<HR>
+		<A NAME = "WS"></A>
+		<B>Window Scanner</B><BR>
+		<HR>
+		<P>
+		Window Scanner allows the user to explore and manipulate the windows of running applications.
+		</P>
+
+		<HR>
+		<A NAME = "FAW"></A>
+		<B>Finding a Window</B><BR>
+		<HR>
+		<BR>
+		<P>
+		All open windows are displayed by default. Specify the window's text and/or class name (or part thereof) and then, use the "Search" button to narrow this list to the windows with the specified properties.
+		</P>
+
+		<HR>
+		<A NAME = "SO"></A>
+		<B>Search Options</B><BR>
+		<HR>
+		<P>
+		The following options can be selected:
+		<UL TYPE = disc>
+		<LI><B>Case sensitive. </B> Performs a case sensitive search. This option applies to both text and class names.
+		<LI><B>Look for parent windows. </B> Finds all parent windows displaying the specified text of the specified class. All child windows owned by the parent window will be included with the search results.
+		<LI><B>Whole phrases only. </B> Searches for whole phrases only. This option applies to both text and class names.
+		<LI><B>Ignore ampersands. </B> Ignores any ampersands in a text. This can be useful in the case of invisible ampersands that are used to define hotkeys.
+		</UL>
+		<P>
+		Search notes:
+		<UL TYPE = disc>
+		<LI>Only active windows can be found during a search.
+		<LI>Windows that are part of, for example, console applications, HTML applications, Java applets/applications, MS-DOS applications, or, web pages are not detected.
+		<LI>Controls contained by a window (buttons for example) are child windows, and will be found as well.
+		</UL>
+
+		<HR>
+		<A NAME = "SR"></A>
+		<B>Search Results</B><BR>
+		<HR>
+		<P>
+		The following text properties indicate the following window properties:<BR>
+		<BR>
+		<TABLE BORDEr = 1>
+		<TR><TD><B> Property: </B></TD><TD><B> Description: </B></TD></TR>
+		<TR><TD> Bold </TD><TD> Visible windows. </TD></TR>
+		<TR><TD> Italic </TD><TD> Window containing passwords. </TD></TR>
+		<TR><TD> Red </TD><TD> Disabled windows. </TD></TR>
+		<TR><TD> Yellow </TD><TD> Handles that do not refer to windows (any more.) </TD></TR>
+		<TR><TD> Cyan background </TD><TD> Popup windows. </TD></TR>
+		<TR><TD> White background </TD><TD> Any windows that are not popup windows. </TD></TR>
+		</TABLE>
+
+		<HR>
+		<A NAME = "SAOCI"></A>
+		<B>Searching and/or Copying Information</B><BR>
+		<HR>
+		<P>
+		The following options can be found in the "search results" menu:
+		<UL TYPE = disc>
+		<LI><B>Copy.</B> Copies the highlighted window information.
+		<LI><B>Find text.</B> Searches the search results for the specified text.
+		<LI><B>Find next match.</B> Repeats an earlier search continuing at the selected search result.
+		</UL>
+
+		<HR>
+		<A NAME = "CAOVWP"></A>
+		<B>Changing and/or Viewing Window Properties</B><BR>
+		<HR>
+		<P>
+		Double click on a window in the search-results table to display a menu with actions that can be performed on the selected window. These actions are:
+		<UL TYPE = disc>
+		<LI><B>Close window.</B> Closes the window.
+		<LI><B>Enable window.</B> or <B>Disable window.</B> Enables or disables the selected window.
+		<LI><B>Show window.</B> or <B>Hide window.</B> Shows or hides the selected window.
+		<LI><B>Change dimensions/position.</B> Requests the user to specify the window's new position, width, and height. The following format must be used when specifying these values: x, y, width, height.
+		<LI><B>Change parent.</B> Requests the user to specify the window's new parent window.
+		<LI><B>Change text.</B> Requests the user to specify a new text to be displayed by the window.
+		<LI><B>The "Change state.</B> submenu contains actions for maximizing, minimizing, and restoring the window.
+		<LI><B>The "Change z-order.</B> submenu contains actions for moving the window in front of or behind other windows.
+		<LI><B>Flash window.</B> Flashes the window. This can be useful for locating the window on the screen.
+		<LI><B>Get process information.</B> Displays to which thread, process and module the window belongs.
+		</UL>
+
+		<HR>
+		<A NAME = "EW"></A>
+		<B>Excluding Windows</B><BR>
+		<HR>
+		<P>
+		Windows with the following properties can excluded from the search results:
+		<UL TYPE = disc>
+		<LI>Child/parent windows.
+		<LI>Disabled/enabled windows.
+		<LI>Hidden/visible windows.
+		<LI>Non-group/group windows.
+		<LI>Non-popup/popup windows.
+		<LI>Non-tabstop/tabstop windows.
+		<LI>Non-unicode/unicode windows.
+		</UL>
+
+		<HR><CENTER>
+			<INPUT TYPE = "button" VALUE = "Close" onClick = "javascript:window.close();">
+		</CENTER><HR>
+		<P ALIGN = RIGHT><B>By: Peter Swinkels</B><P>
+
+	</BODY>
+</HTML>
