@@ -238,7 +238,7 @@ Attribute VB_Exposed = False
 'This module contains this program's interface.
 Option Explicit
 
-'This list defines the window properties which can be excluded from the search results.
+'This enumeration lists the window properties which can be excluded from the search results.
 Private Enum ExcludableE
    ExcludeNone = -1    'Exclude no windows.
    ExcludeChild        'Child windows.
