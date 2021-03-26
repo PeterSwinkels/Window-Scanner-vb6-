@@ -1,16 +1,16 @@
 VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.Form WindowScannerWindow 
-   ClientHeight    =   4464
+   ClientHeight    =   4470
    ClientLeft      =   60
-   ClientTop       =   636
-   ClientWidth     =   4692
+   ClientTop       =   630
+   ClientWidth     =   4695
    ClipControls    =   0   'False
    Icon            =   "Winscan.frx":0000
    KeyPreview      =   -1  'True
-   ScaleHeight     =   18.6
+   ScaleHeight     =   18.625
    ScaleMode       =   4  'Character
-   ScaleWidth      =   39.1
+   ScaleWidth      =   39.125
    StartUpPosition =   2  'CenterScreen
    Begin VB.CheckBox IgnoreAmpersandsBox 
       Caption         =   "&Ignore ampersands."
@@ -81,8 +81,8 @@ Begin VB.Form WindowScannerWindow
       ToolTipText     =   "Double click to perform an action on the selected search result."
       Top             =   2160
       Width           =   4335
-      _ExtentX        =   7641
-      _ExtentY        =   3831
+      _ExtentX        =   7646
+      _ExtentY        =   3836
       _Version        =   393216
       Cols            =   4
       FixedCols       =   0
@@ -257,7 +257,7 @@ Private Enum ExcludableE
    ExcludeUnicode      'Unicode windows.
 End Enum
 
-Private Matches() As Long 'The indexes of the windows that match the specified search criteria.
+Private Matches() As Long   'Contains the indexes of the windows that match the specified search criteria.
 
 'This procedure builds elements of this window's interface.
 Public Sub BuildInterface()
@@ -296,7 +296,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure changes the window's parent window.
+'This procedure changes the specified window's parent window.
 Private Sub ChangeParent(Index As Long)
 On Error GoTo ErrorTrap
 Dim NewParent As String
@@ -383,7 +383,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure gives the command to change the window's parent window.
+'This procedure gives the command to change the selected window's parent window.
 Private Sub ChangeParentMenu_Click()
 On Error GoTo ErrorTrap
    ChangeParent Matches(SearchResultsTable.Row - 1)
@@ -429,8 +429,8 @@ Dim Xywh As String
    End With
    
    Xywh = InputBox$("New dimensions and position (x, y, width, height):", , Join(NewXywh(), ","))
-   If Xywh = Empty Then Exit Sub
-   NewXywh() = Split(Replace(Xywh, " ", Empty), ",")
+   If Xywh = vbNullString Then Exit Sub
+   NewXywh() = Split(Replace(Xywh, " ", vbNullString), ",")
    
    CheckForError MoveWindow(Windows(Index).Handle, CLng(Val(NewXywh(0))), CLng(Val(NewXywh(1))), CLng(Val(NewXywh(2))), CLng(Val(NewXywh(3))), CLng(True))
    RefreshWindow Windows(Index).Handle
@@ -455,7 +455,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure maximizes, minimizes, or restores the specified window.
+'This procedure changes the specified window's state to the specified new state.
 Private Sub ChangeState(Index As Long, NewState As Long)
 On Error GoTo ErrorTrap
    If Not RefersToWindow(Windows(Index).Handle) Then
@@ -479,9 +479,11 @@ Private Sub ChangeStateMenu_Click(Index As Integer)
 On Error GoTo ErrorTrap
 Dim NewState As Long
    
-   If Index = 0 Then NewState = SW_SHOWMAXIMIZED
-   If Index = 1 Then NewState = SW_SHOWMINIMIZED
-   If Index = 2 Then NewState = SW_RESTORE
+   Select Case Index
+      Case 0: NewState = SW_SHOWMAXIMIZED
+      Case 1: NewState = SW_SHOWMINIMIZED
+      Case 2: NewState = SW_RESTORE
+   End Select
    
    ChangeState Matches(SearchResultsTable.Row - 1), NewState
 EndRoutine:
@@ -529,7 +531,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure changes the specified window's z-order.
+'This procedure changes the specified window's z-order to specified new z-order.
 Private Sub ChangeZorder(Index As Long, NewZOrder As Long)
 On Error GoTo ErrorTrap
 Dim Dimensions As RECT
@@ -560,10 +562,12 @@ Private Sub ChangeZOrderMenu_Click(Index As Integer)
 On Error GoTo ErrorTrap
 Dim NewZOrder As Long
  
-   If Index = 0 Then NewZOrder = HWND_BOTTOM
-   If Index = 1 Then NewZOrder = HWND_NOTOPMOST
-   If Index = 2 Then NewZOrder = HWND_TOP
-   If Index = 3 Then NewZOrder = HWND_TOPMOST
+   Select Case NewZOrder
+      Case 0: NewZOrder = HWND_BOTTOM
+      Case 1: NewZOrder = HWND_NOTOPMOST
+      Case 2: NewZOrder = HWND_TOP
+      Case 3: NewZOrder = HWND_TOPMOST
+   End Select
    
    ChangeZorder Matches(SearchResultsTable.Row - 1), NewZOrder
 EndRoutine:
@@ -618,7 +622,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure displays the specified search result at the current row.
+'This procedure displays the specified search result at the selected row.
 Private Sub DisplaySearchResult(Index As Long)
 On Error GoTo ErrorTrap
 Dim Column As Long
@@ -654,7 +658,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure displays the search results.
+'This procedure displays the search results containing the specified text and class.
 Private Sub DisplaySearchResults(SearchText As String, SearchClass As String)
 On Error GoTo ErrorTrap
 Dim Index As Long
@@ -815,9 +819,9 @@ Dim FoundRow As Long
 Dim NewSearchText As String
 Static SearchText As String
 
-   If (SearchText = Empty) Or (Not FindNext) Then
+   If (SearchText = vbNullString) Or (Not FindNext) Then
       NewSearchText = InputBox$("Find:", , SearchText)
-      If NewSearchText = Empty Then Exit Sub
+      If NewSearchText = vbNullString Then Exit Sub
       SearchText = NewSearchText
    End If
    
@@ -855,7 +859,7 @@ ErrorTrap:
 End Sub
 
 
-'This procedure makes the specified window flash.
+'This procedure flashes the specified window.
 Private Sub FlashWindow(Index As Long)
 On Error GoTo ErrorTrap
 Dim Flash As Long
@@ -898,7 +902,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure gives the command to make the selected window flash.
+'This procedure gives the command to flash the selected window.
 Private Sub FlashWindowMenu_Click()
 On Error GoTo ErrorTrap
    FlashWindow Matches(SearchResultsTable.Row - 1)
@@ -910,7 +914,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure initializes the window and the objects inside it.
+'This procedure initializes this window and its interface elements.
 Private Sub Form_Load()
 On Error GoTo ErrorTrap
    Erase Matches()
@@ -926,7 +930,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure adjusts the size and position of the objects to the new size of the window.
+'This procedure adjusts the interface contained by this window to its new size.
 Private Sub Form_Resize()
 On Error Resume Next
 Dim Column As Long
@@ -944,7 +948,7 @@ Dim Column As Long
    WindowTextBox.Width = Me.ScaleWidth - WindowTextBox.Left - 2
 End Sub
 
-'This procedure displays the process information for the specified window.
+'This procedure displays the specified window's process information.
 Private Sub GetProcessInformation(Index As Long)
 On Error GoTo ErrorTrap
 Dim Message As String
@@ -973,7 +977,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure gives the command to display the process information for the selected window.
+'This procedure gives the command to display the specified window's process information.
 Private Sub GetProcessInformationMenu_Click()
 On Error GoTo ErrorTrap
    GetProcessInformation Matches(SearchResultsTable.Row - 1)
@@ -985,7 +989,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure opens this program's help.
+'This procedure gives the command to open this program's help file.
 Private Sub HelpMenu_Click()
 On Error GoTo ErrorTrap
 Dim HelpPath As String
@@ -994,7 +998,7 @@ Dim HelpPath As String
    If Not Right$(HelpPath, 1) = "\" Then HelpPath = HelpPath & "\"
    HelpPath = HelpPath & "Winscan.hta"
    
-   If Dir$(HelpPath) = Empty Then
+   If Dir$(HelpPath, vbArchive Or vbNormal) = vbNullString Then
       MsgBox "Could not find the help file.", vbExclamation
    Else
       Shell "Mshta.exe """ & HelpPath & """", vbMaximizedFocus
@@ -1020,7 +1024,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure compares the specified texts with each other according to the selected comparisson options.
+'This procedure compares the specified texts using the options selected by the user.
 Private Function Match(ByVal CompareText As String, ByVal SearchText As String) As Boolean
 On Error GoTo ErrorTrap
 Dim Result As Boolean
@@ -1033,13 +1037,13 @@ Dim Result As Boolean
    End If
     
    If IgnoreAmpersandsBox.Value = vbChecked Then
-      CompareText = Replace(CompareText, "&", Empty)
-      SearchText = Replace(SearchText, "&", Empty)
+      CompareText = Replace(CompareText, "&", vbNullString)
+      SearchText = Replace(SearchText, "&", vbNullString)
    End If
      
-   If SearchText = Empty Then
+   If SearchText = vbNullString Then
       Result = True
-   ElseIf Not SearchText = Empty Then
+   ElseIf Not SearchText = vbNullString Then
       If WholePhrasesOnlyBox.Value = vbChecked Then
          Result = (SearchText = CompareText)
       ElseIf WholePhrasesOnlyBox.Value = vbUnchecked Then

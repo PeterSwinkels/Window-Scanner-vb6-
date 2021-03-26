@@ -1,26 +1,23 @@
 Attribute VB_Name = "WindowScannerModule"
-'This module contains this program's main procedures.
+'This module contains this program's core procedures.
 Option Explicit
 
-'This structure defines a locally unique identifier.
+'The Microsoft Windows API constants, functions and structures used by this program.
 Private Type LUID
    LowPart As Long
    HighPart As Long
 End Type
 
-'This structure defines a locally unique identifier and its attributes.
 Private Type LUID_AND_ATTRIBUTES
    pLuid As LUID
    Attributes As Long
 End Type
 
-'This structure defines a coordinate.
 Public Type POINTAPI
    x As Long
    y As Long
 End Type
 
-'This structure defines a rectangle.
 Public Type RECT
    Left As Long
    Top As Long
@@ -28,13 +25,11 @@ Public Type RECT
    Bottom As Long
 End Type
 
-'This structure defines token privileges.
 Private Type TOKEN_PRIVILEGES
    PrivilegeCount As Long
    Privileges(1) As LUID_AND_ATTRIBUTES
 End Type
 
-'The Microsoft Windows API constants used by this program.
 Public Const ES_PASSWORD As Long = &H20&
 Public Const GWL_STYLE As Long = -16
 Public Const HWND_BOTTOM As Long = 1
@@ -73,7 +68,6 @@ Private Const TOKEN_ALL_ACCESS As Long = &HFF&
 Private Const WM_GETTEXT As Long = &HD&
 Private Const WM_GETTEXTLENGTH As Long = &HE&
 
-'The Microsoft Windows API's used by this program.
 Public Declare Function BringWindowToTop Lib "User32.dll" (ByVal hwnd As Long) As Long
 Public Declare Function EnableWindow Lib "User32.dll" (ByVal hwnd As Long, ByVal fEnable As Long) As Long
 Public Declare Function EnumWindows Lib "User32.dll" (ByVal lpEnumFunc As Long, ByVal lParam As Long) As Long
@@ -112,31 +106,31 @@ Private Declare Function UpdateWindow Lib "User32.dll" (ByVal hwnd As Long) As L
 Private Declare Function WaitMessage Lib "User32.dll" () As Long
 
 'The constants used by this program.
-Public Const NO_HANDLE As Long = 0                 'Indicates no handle.
-Private Const MAX_PATH As Long = 260                'The maximum number of characters allowed for a file path.
-Private Const MAX_STRING As Long = 65535            'The maximum number of characters used for a string buffer.
+Public Const NO_HANDLE As Long = 0        'Indicates no handle.
+Private Const MAX_PATH As Long = 260       'Defines the maximum number of characters allowed for a file path.
+Private Const MAX_STRING As Long = 65535   'Defines the maximum number of characters used for a string buffer.
 
 'This structure defines the thread, module and process information of a window.
 Public Type WindowProcessStr
-   ModuleH As Long       'The handle of the module that created the window.
-   ModulePath As String  'The path of the module that created the window.
-   ThreadId As Long      'The window's thread id.
-   ProcessH As Long      'The handle of the process to which the window belongs.
-   ProcessId As Long     'The id of the process to which the window belongs.
-   ProcessPath As String 'The path of the process' executable to which the window belongs.
+   ModuleH As Long       'Defines the handle of the module that created the window.
+   ModulePath As String  'Defines the path of the module that created the window.
+   ThreadId As Long      'Defines the window's thread id.
+   ProcessH As Long      'Defines the handle of the process to which the window belongs.
+   ProcessId As Long     'Defines the id of the process to which the window belongs.
+   ProcessPath As String 'Defines the path of the process' executable to which the window belongs.
 End Type
 
 'This structure defines the properties of a window.
 Public Type WindowStr
-   ClassName As String   'The window's class.
+   ClassName As String   'Defines the window's class.
    Enabled As Boolean    'Indicates whether the window is enabled.
-   Handle As Long        'The window handle.
-   Parent As Long        'The window's parent.
-   Text As String        'The window's text.
+   Handle As Long        'Defines the window's handle.
+   Parent As Long        'Defines the window's parent.
+   Text As String        'Defines the window's text.
    Visible As Boolean    'Inicates whether the window is visible.
 End Type
 
-Public Windows() As WindowStr 'Contains all open windows found.
+Public Windows() As WindowStr   'Contains all open windows found.
 'This procedure checks whether an error has occurred during the most recent Windows API call.
 Public Function CheckForError(Optional ReturnValue As Long = 0, Optional ResetSuppression As Boolean = False, Optional Ignored As Long = ERROR_SUCCESS) As Long
 Dim Description As String
@@ -197,7 +191,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure collects the information of the most recently found active window.
+'This procedure collects the specified window's information and adds it to the list of active windows found.
 Public Sub GetWindowInformation(WindowH As Long)
 On Error GoTo ErrorTrap
    ReDim Preserve Windows(LBound(Windows()) To UBound(Windows()) + 1) As WindowStr
@@ -218,7 +212,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure returns the process information for the specified window.
+'This procedure returns the specified window's process information.
 Public Function GetWindowProcess(WindowH As Long) As WindowProcessStr
 On Error GoTo ErrorTrap
 Dim Length As Long
@@ -253,7 +247,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure returns the text contained by the specified window.
+'This procedure returns the specified window's text.
 Public Function GetWindowText(WindowH As Long) As String
 On Error GoTo ErrorTrap
 Dim Length As Long
@@ -303,7 +297,7 @@ Public Sub HandleError()
    MsgBox "Error: " & CStr(Err.Number) & vbCr & Err.Description, vbExclamation
 End Sub
 
-'This procedure handles any windows that are found.
+'This procedure handles any top level windows that are found.
 Public Function HandleWindows(ByVal hwnd As Long, ByVal lParam As Long) As Long
 On Error GoTo ErrorTrap
    GetWindowInformation hwnd
@@ -318,7 +312,7 @@ ErrorTrap:
 End Function
 
 
-'This procedure contains the code that is executed when this program is started.
+'This procedure is executed when this program is started.
 Private Sub Main()
 On Error GoTo ErrorTrap
    CheckForError , ResetSuppression:=True
