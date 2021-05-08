@@ -102,6 +102,7 @@ Private Declare Function LookupPrivilegeValueA Lib "Advapi32.dll" (ByVal lpSyste
 Private Declare Function OpenProcess Lib "Kernel32.dll" (ByVal dwDesiredAccess As Long, ByVal bInheritHandle As Long, ByVal dwProcessId As Long) As Long
 Private Declare Function OpenProcessToken Lib "Advapi32.dll" (ByVal ProcessH As Long, ByVal DesiredAccess As Long, TokenHandle As Long) As Long
 Private Declare Function PostMessageA Lib "User32.dll" (ByVal hwnd As Long, ByVal wMsg As Long, ByVal wParam As Long, ByVal lParam As Long) As Long
+Private Declare Function RealGetWindowClassA Lib "User32.dll" (ByVal hwnd As Long, ByVal pszType As String, ByVal cchType As Long) As Long
 Private Declare Function UpdateWindow Lib "User32.dll" (ByVal hwnd As Long) As Long
 Private Declare Function WaitMessage Lib "User32.dll" () As Long
 
@@ -163,6 +164,24 @@ Static SuppressAPIErrors As Boolean
    
 EndRoutine:
    CheckForError = ReturnValue
+   Exit Function
+   
+ErrorTrap:
+   HandleError
+   Resume EndRoutine
+End Function
+
+'This procedure returns the specified window's base class.
+Public Function GetWindowBaseClass(WindowH As Long) As String
+On Error GoTo ErrorTrap
+Dim Length As Long
+Dim WindowBaseClass As String
+
+   WindowBaseClass = String$(MAX_STRING, vbNullChar)
+   Length = CheckForError(RealGetWindowClassA(WindowH, ByVal WindowBaseClass, Len(WindowBaseClass)))
+   WindowBaseClass = Left$(WindowBaseClass, Length)
+EndRoutine:
+   GetWindowBaseClass = WindowBaseClass
    Exit Function
    
 ErrorTrap:

@@ -217,6 +217,10 @@ Begin VB.Form WindowScannerWindow
       Begin VB.Menu WindowSeparator2Menu 
          Caption         =   "-"
       End
+      Begin VB.Menu GetBaseClassInformationMenu 
+         Caption         =   "&Get Base Class Information"
+         Shortcut        =   ^E
+      End
       Begin VB.Menu GetProcessInformationMenu 
          Caption         =   "&Get process information."
          Shortcut        =   ^I
@@ -330,6 +334,7 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Sub
+
 
 'This procedure checks whether the specified window has an excluded property.
 Private Function IsExcluded(Index As Long) As Boolean
@@ -613,6 +618,7 @@ End Sub
 'This procedure copies the selected window information to the clipboard.
 Private Sub CopyMenu_Click()
 On Error GoTo ErrorTrap
+   Clipboard.Clear
    Clipboard.SetText SearchResultsTable.Text, vbCFText
 EndRoutine:
    Exit Sub
@@ -902,6 +908,25 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
+'This procedure displays the selected window's base class information.
+Private Sub GetBaseClassInformation(Index As Long)
+On Error GoTo ErrorTrap
+Dim WindowH As Long
+
+   If Not RefersToWindow(Windows(Index).Handle) Then
+      DisplaySearchResult Index
+      Exit Sub
+   End If
+
+   MsgBox "Base class: " & GetWindowBaseClass(Windows(Index).Handle), vbOKOnly Or vbInformation, App.Title
+EndRoutine:
+   Exit Sub
+   
+ErrorTrap:
+   HandleError
+   Resume EndRoutine
+End Sub
+
 'This procedure gives the command to flash the selected window.
 Private Sub FlashWindowMenu_Click()
 On Error GoTo ErrorTrap
@@ -946,6 +971,18 @@ Dim Column As Long
    SearchButton.Left = Me.ScaleWidth - SearchButton.Width - 2
    WindowClassBox.Width = Me.ScaleWidth - WindowClassBox.Left - 2
    WindowTextBox.Width = Me.ScaleWidth - WindowTextBox.Left - 2
+End Sub
+
+'This procedure gives the command to display the selected window's base class information.
+Private Sub GetBaseClassInformationMenu_Click()
+On Error GoTo ErrorTrap
+   GetBaseClassInformation Matches(SearchResultsTable.Row - 1)
+EndRoutine:
+   Exit Sub
+   
+ErrorTrap:
+   HandleError
+   Resume EndRoutine
 End Sub
 
 'This procedure displays the specified window's process information.
