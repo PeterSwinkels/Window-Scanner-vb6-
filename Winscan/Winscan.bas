@@ -157,7 +157,7 @@ Static SuppressAPIErrors As Boolean
       End If
      
       Message = "API error code: " & CStr(ErrorCode) & " - " & Description
-      Message = Message & "Return value: " & CStr(ReturnValue) & vbCrLf
+      Message = Message & "Return value: " & CStr(ReturnValue) & vbCr
       Message = Message & "Continue displaying API error messages?"
       If Not SuppressAPIErrors Then SuppressAPIErrors = (MsgBox(Message, vbYesNo Or vbExclamation) = vbNo)
    End If
@@ -361,9 +361,9 @@ Dim Message As String
 
    HIsWindow = CBool(CheckForError(IsWindow(WindowH)))
    If Not HIsWindow Then
-      Message = "The selected object is not a window." & vbCrLf
-      Message = Message & "This could be due to the following causes:" & vbCrLf
-      Message = Message & "The window no longer exists," & vbCrLf
+      Message = "The selected object is not a window." & vbCr
+      Message = Message & "This could be due to the following causes:" & vbCr
+      Message = Message & "The window no longer exists," & vbCr
       Message = Message & "or its handle has changed."
       MsgBox Message, vbInformation
    End If
