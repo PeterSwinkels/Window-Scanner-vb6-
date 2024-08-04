@@ -1,16 +1,16 @@
 VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.Form WindowScannerWindow 
-   ClientHeight    =   4470
+   ClientHeight    =   4464
    ClientLeft      =   60
-   ClientTop       =   630
-   ClientWidth     =   4695
+   ClientTop       =   636
+   ClientWidth     =   4692
    ClipControls    =   0   'False
    Icon            =   "Winscan.frx":0000
    KeyPreview      =   -1  'True
-   ScaleHeight     =   18.625
+   ScaleHeight     =   18.6
    ScaleMode       =   4  'Character
-   ScaleWidth      =   39.125
+   ScaleWidth      =   39.1
    StartUpPosition =   2  'CenterScreen
    Begin VB.CheckBox IgnoreAmpersandsBox 
       Caption         =   "&Ignore ampersands."
@@ -81,8 +81,8 @@ Begin VB.Form WindowScannerWindow
       ToolTipText     =   "Double click to perform an action on the selected search result."
       Top             =   2160
       Width           =   4335
-      _ExtentX        =   7646
-      _ExtentY        =   3836
+      _ExtentX        =   7641
+      _ExtentY        =   3831
       _Version        =   393216
       Cols            =   4
       FixedCols       =   0
@@ -271,10 +271,7 @@ Dim Index As Long
 
    Me.Width = Screen.Width / 2
    Me.Height = Screen.Height / 2
-   
-   With App
-      Me.Caption = .Title & " v" & CStr(.Major) & "." & CStr(.Minor) & CStr(.Revision) & " - by: " & App.CompanyName
-   End With
+   Me.Caption = ProgramInformation()
    
    With SearchResultsTable
       .Row = 0
@@ -285,7 +282,7 @@ Dim Index As Long
    End With
    
    ExcludeMenus = Array("Child", "Parent", "Disabled", "Enabled", "Hidden", "Visible", "Non-group", "Group", "Non-popup", "Popup", "Non-tab stop", "Tab stop", "Non-unicode", "Unicode")
-   For Index = LBound(ExcludeMenus) To UBound(ExcludeMenus)
+   For Index = LBound(ExcludeMenus()) To UBound(ExcludeMenus())
       If Index > ExcludeMenu.UBound Then Load ExcludeMenu(Index)
       ExcludeMenu(Index).Caption = "&" & ExcludeMenus(Index) & " windows."
    Next Index
@@ -306,27 +303,27 @@ On Error GoTo ErrorTrap
 Dim NewParent As String
 Dim Styles As Long
 
-   If Not RefersToWindow(Windows(Index).Handle) Then
-      DisplaySearchResult Index
-      Exit Sub
-   End If
-   
-   NewParent = CStr(Windows(Index).Parent)
-   NewParent = InputBox$("New parent window:", , NewParent)
-   If StrPtr(NewParent) = 0 Then Exit Sub
-   
-   CheckForError SetParent(Windows(Index).Handle, CLng(Val(NewParent)))
-   
-   Styles = CheckForError(GetWindowLongA(Windows(Index).Handle, GWL_STYLE))
-   If CLng(Val(NewParent)) = NO_HANDLE Then
-      If WindowHasStyle(Windows(Index).Handle, WS_CHILD) Then Styles = Styles Xor WS_CHILD
+   If RefersToWindow(Windows(Index).Handle) Then
+      NewParent = InputBox$("New parent window:", , CStr(Windows(Index).Parent))
+      
+      If Not StrPtr(NewParent) = 0 Then
+         CheckForError SetParent(Windows(Index).Handle, CLng(Val(NewParent)))
+         
+         Styles = CheckForError(GetWindowLongA(Windows(Index).Handle, GWL_STYLE))
+         If CLng(Val(NewParent)) = NO_HANDLE Then
+            If WindowHasStyle(Windows(Index).Handle, WS_CHILD) Then Styles = Styles Xor WS_CHILD
+         Else
+            Styles = Styles Or WS_CHILD
+         End If
+         CheckForError SetWindowLongA(Windows(Index).Handle, GWL_STYLE, Styles)
+         
+         RefreshWindow Windows(Index).Handle
+         UpdateSearchResults
+      End If
    Else
-      Styles = Styles Or WS_CHILD
+      DisplaySearchResult Index
    End If
-   CheckForError SetWindowLongA(Windows(Index).Handle, GWL_STYLE, Styles)
    
-   RefreshWindow Windows(Index).Handle
-   UpdateSearchResults
 EndRoutine:
    Exit Sub
    
@@ -391,7 +388,9 @@ End Function
 'This procedure gives the command to change the selected window's parent window.
 Private Sub ChangeParentMenu_Click()
 On Error GoTo ErrorTrap
+
    ChangeParent Matches(SearchResultsTable.Row - 1)
+
 EndRoutine:
    Exit Sub
    
@@ -408,38 +407,39 @@ Dim Dimensions As RECT
 Dim NewXywh() As String
 Dim Xywh As String
    
-   If Not RefersToWindow(Windows(Index).Handle) Then
-      DisplaySearchResult Index
-      Exit Sub
+   If RefersToWindow(Windows(Index).Handle) Then
+      CheckForError GetWindowRect(Windows(Index).Handle, Dimensions)
+      
+      ReDim NewXywh(0 To 3) As String
+      
+      With Dimensions
+         NewXywh(2) = CStr(.Right - .Left)
+         NewXywh(3) = CStr(.Bottom - .Top)
+         
+         If Not Windows(Index).Parent = NO_HANDLE Then
+            Coordinate.x = .Left
+            Coordinate.y = .Top
+            CheckForError ScreenToClient(Windows(Index).Parent, Coordinate)
+            .Left = CStr(Coordinate.x)
+            .Top = CStr(Coordinate.y)
+         End If
+      
+         NewXywh(0) = CStr(.Left)
+         NewXywh(1) = CStr(.Top)
+      End With
+      
+      Xywh = InputBox$("New dimensions and position (x, y, width, height):", , Join(NewXywh(), ","))
+      If Not Xywh = vbNullString Then
+         NewXywh() = Split(Replace(Xywh, " ", vbNullString), ",")
+         
+         CheckForError MoveWindow(Windows(Index).Handle, CLng(Val(NewXywh(0))), CLng(Val(NewXywh(1))), CLng(Val(NewXywh(2))), CLng(Val(NewXywh(3))), CLng(True))
+         RefreshWindow Windows(Index).Handle
+         UpdateSearchResults
+      End If
+   Else
+     DisplaySearchResult Index
    End If
     
-   CheckForError GetWindowRect(Windows(Index).Handle, Dimensions)
-   
-   ReDim NewXywh(0 To 3) As String
-   
-   With Dimensions
-      NewXywh(2) = CStr(.Right - .Left)
-      NewXywh(3) = CStr(.Bottom - .Top)
-      
-      If Not Windows(Index).Parent = NO_HANDLE Then
-         Coordinate.x = .Left
-         Coordinate.y = .Top
-         CheckForError ScreenToClient(Windows(Index).Parent, Coordinate)
-         .Left = CStr(Coordinate.x)
-         .Top = CStr(Coordinate.y)
-      End If
-   
-      NewXywh(0) = CStr(.Left)
-      NewXywh(1) = CStr(.Top)
-   End With
-   
-   Xywh = InputBox$("New dimensions and position (x, y, width, height):", , Join(NewXywh(), ","))
-   If Xywh = vbNullString Then Exit Sub
-   NewXywh() = Split(Replace(Xywh, " ", vbNullString), ",")
-   
-   CheckForError MoveWindow(Windows(Index).Handle, CLng(Val(NewXywh(0))), CLng(Val(NewXywh(1))), CLng(Val(NewXywh(2))), CLng(Val(NewXywh(3))), CLng(True))
-   RefreshWindow Windows(Index).Handle
-   UpdateSearchResults
 EndRoutine:
    Exit Sub
    
@@ -451,7 +451,9 @@ End Sub
 'This procedure gives the command to set the selected window's dimensions and position.
 Private Sub ChangePositionDimensionsMenu_Click()
 On Error GoTo ErrorTrap
+
    ChangePositionDimensions Matches(SearchResultsTable.Row - 1)
+
 EndRoutine:
    Exit Sub
    
@@ -463,14 +465,15 @@ End Sub
 'This procedure changes the specified window's state to the specified new state.
 Private Sub ChangeState(Index As Long, NewState As Long)
 On Error GoTo ErrorTrap
-   If Not RefersToWindow(Windows(Index).Handle) Then
+
+   If RefersToWindow(Windows(Index).Handle) Then
+      CheckForError ShowWindow(Windows(Index).Handle, NewState)
+      RefreshWindow Windows(Index).Handle
+      UpdateSearchResults
+   Else
       DisplaySearchResult Index
-      Exit Sub
    End If
-    
-   CheckForError ShowWindow(Windows(Index).Handle, NewState)
-   RefreshWindow Windows(Index).Handle
-   UpdateSearchResults
+       
 EndRoutine:
    Exit Sub
    
@@ -485,12 +488,16 @@ On Error GoTo ErrorTrap
 Dim NewState As Long
    
    Select Case Index
-      Case 0: NewState = SW_SHOWMAXIMIZED
-      Case 1: NewState = SW_SHOWMINIMIZED
-      Case 2: NewState = SW_RESTORE
+      Case 0
+         NewState = SW_SHOWMAXIMIZED
+      Case 1
+         NewState = SW_SHOWMINIMIZED
+      Case 2
+         NewState = SW_RESTORE
    End Select
    
    ChangeState Matches(SearchResultsTable.Row - 1), NewState
+   
 EndRoutine:
    Exit Sub
    
@@ -504,18 +511,20 @@ Private Sub ChangeText(Index As Long)
 On Error GoTo ErrorTrap
 Dim WindowText As String
  
-   If Not RefersToWindow(Windows(Index).Handle) Then
+   If RefersToWindow(Windows(Index).Handle) Then
+      WindowText = GetWindowText(Windows(Index).Handle)
+      WindowText = InputBox$("New window text:", , WindowText)
+      If Not StrPtr(WindowText) = 0 Then
+         CheckForError SendMessageW(Windows(Index).Handle, WM_SETTEXT, CLng(0), StrPtr(WindowText))
+      
+         RefreshWindow Windows(Index).Handle
+         UpdateSearchResults
+      End If
+   Else
       DisplaySearchResult Index
-      Exit Sub
    End If
     
-   WindowText = GetWindowText(Windows(Index).Handle)
-   WindowText = InputBox$("New window text:", , WindowText)
-   If StrPtr(WindowText) = 0 Then Exit Sub
-   CheckForError SendMessageW(Windows(Index).Handle, WM_SETTEXT, CLng(0), StrPtr(WindowText))
    
-   RefreshWindow Windows(Index).Handle
-   UpdateSearchResults
 EndRoutine:
    Exit Sub
    
@@ -527,7 +536,9 @@ End Sub
 'This procedure gives the command to change the selected window's text.
 Private Sub ChangeTextMenu_Click()
 On Error GoTo ErrorTrap
+
    ChangeText Matches(SearchResultsTable.Row - 1)
+
 EndRoutine:
    Exit Sub
    
@@ -541,19 +552,19 @@ Private Sub ChangeZorder(Index As Long, NewZOrder As Long)
 On Error GoTo ErrorTrap
 Dim Dimensions As RECT
 
-   If Not RefersToWindow(Windows(Index).Handle) Then
+   If RefersToWindow(Windows(Index).Handle) Then
+      CheckForError GetWindowRect(Windows(Index).Handle, Dimensions)
+      
+      With Dimensions
+         CheckForError SetWindowPos(Windows(Index).Handle, NewZOrder, CLng(0), CLng(0), .Right - .Left, .Bottom - .Top, SWP_DRAWFRAME Or SWP_NOACTIVATE Or SWP_NOMOVE Or SWP_SHOWWINDOW)
+      End With
+      
+      RefreshWindow Windows(Index).Handle
+      UpdateSearchResults
+   Else
       DisplaySearchResult Index
-      Exit Sub
    End If
-   
-   CheckForError GetWindowRect(Windows(Index).Handle, Dimensions)
-   
-   With Dimensions
-      CheckForError SetWindowPos(Windows(Index).Handle, NewZOrder, CLng(0), CLng(0), .Right - .Left, .Bottom - .Top, SWP_DRAWFRAME Or SWP_NOACTIVATE Or SWP_NOMOVE Or SWP_SHOWWINDOW)
-   End With
-   
-   RefreshWindow Windows(Index).Handle
-   UpdateSearchResults
+      
 EndRoutine:
    Exit Sub
    
@@ -568,13 +579,18 @@ On Error GoTo ErrorTrap
 Dim NewZOrder As Long
  
    Select Case NewZOrder
-      Case 0: NewZOrder = HWND_BOTTOM
-      Case 1: NewZOrder = HWND_NOTOPMOST
-      Case 2: NewZOrder = HWND_TOP
-      Case 3: NewZOrder = HWND_TOPMOST
+      Case 0
+         NewZOrder = HWND_BOTTOM
+      Case 1
+         NewZOrder = HWND_NOTOPMOST
+      Case 2
+         NewZOrder = HWND_TOP
+      Case 3
+         NewZOrder = HWND_TOPMOST
    End Select
    
    ChangeZorder Matches(SearchResultsTable.Row - 1), NewZOrder
+   
 EndRoutine:
    Exit Sub
    
@@ -586,7 +602,9 @@ End Sub
 'This procedure gives the command to close the selected window.
 Private Sub CloseWindowMenu_Click()
 On Error GoTo ErrorTrap
+
    CloseWindow Matches(SearchResultsTable.Row - 1)
+   
 EndRoutine:
    Exit Sub
    
@@ -599,14 +617,14 @@ End Sub
 Private Sub CloseWindow(Index As Long)
 On Error GoTo ErrorTrap
 
-   If Not RefersToWindow(Windows(Index).Handle) Then
+   If RefersToWindow(Windows(Index).Handle) Then
+      CheckForError SendMessageW(Windows(Index).Handle, WM_CLOSE, CLng(0), CLng(0))
+      If Not Windows(Index).Parent = 0 Then RefreshWindow Windows(Index).Parent
+      UpdateSearchResults
+   Else
       DisplaySearchResult Index
-      Exit Sub
    End If
-    
-   CheckForError SendMessageW(Windows(Index).Handle, WM_CLOSE, CLng(0), CLng(0))
-   If Not Windows(Index).Parent = 0 Then RefreshWindow Windows(Index).Parent
-   UpdateSearchResults
+   
 EndRoutine:
    Exit Sub
    
@@ -618,8 +636,10 @@ End Sub
 'This procedure copies the selected window information to the clipboard.
 Private Sub CopyMenu_Click()
 On Error GoTo ErrorTrap
+
    Clipboard.Clear
    Clipboard.SetText SearchResultsTable.Text, vbCFText
+
 EndRoutine:
    Exit Sub
    
@@ -656,6 +676,7 @@ Dim CurrentColumn As Long
      Next Column
      .Col = CurrentColumn
    End With
+
 EndRoutine:
    Exit Sub
    
@@ -674,7 +695,7 @@ Dim WindowText As String
 
    ReDim Matches(0 To 0) As Long
 
-   Me.MousePointer = vbHourglass
+   Screen.MousePointer = vbHourglass
    With SearchResultsTable
       .Rows = 1
       For Index = LBound(Windows()) To UBound(Windows())
@@ -685,16 +706,14 @@ Dim WindowText As String
                   If CheckForError(GetParent(WindowParent)) = 0 Then Exit Do
                   WindowParent = CheckForError(GetParent(WindowParent))
                Loop
-            End If
-            
-            If LookForParentWindowsBox.Value = vbChecked Then
+               
                WindowClass = GetWindowClass(WindowParent)
                WindowText = GetWindowText(WindowParent)
             ElseIf LookForParentWindowsBox.Value = vbUnchecked Then
                WindowClass = Windows(Index).ClassName
                WindowText = Windows(Index).Text
             End If
-                     
+            
             If Match(WindowClass, SearchClass) Then
                If Match(WindowText, SearchText) Then
                   If Not IsExcluded(Index) Then
@@ -711,8 +730,9 @@ Dim WindowText As String
       .Col = 0
       If .Rows > 1 Then .Row = 1 Else .Row = 0
    End With
+   
 EndRoutine:
-   Me.MousePointer = vbDefault
+   Screen.MousePointer = vbDefault
    Exit Sub
    
 ErrorTrap:
@@ -724,14 +744,14 @@ End Sub
 Private Sub EnableDisableWindow(Index As Long)
 On Error GoTo ErrorTrap
 
-   If Not RefersToWindow(Windows(Index).Handle) Then
+   If RefersToWindow(Windows(Index).Handle) Then
+      CheckForError EnableWindow(Windows(Index).Handle, CLng(Not Windows(Index).Enabled))
+      RefreshWindow Windows(Index).Handle
+      UpdateSearchResults
+   Else
       DisplaySearchResult Index
-      Exit Sub
    End If
-    
-   CheckForError EnableWindow(Windows(Index).Handle, CLng(Not Windows(Index).Enabled))
-   RefreshWindow Windows(Index).Handle
-   UpdateSearchResults
+   
 EndRoutine:
    Exit Sub
    
@@ -743,7 +763,9 @@ End Sub
 'This procedure gives the command to enable or disable the selected window.
 Private Sub EnableDisableWindowMenu_Click()
 On Error GoTo ErrorTrap
+
    EnableDisableWindow Matches(SearchResultsTable.Row - 1)
+   
 EndRoutine:
    Exit Sub
    
@@ -756,10 +778,11 @@ End Sub
 Private Sub FindInSearchResults(SearchText As String, FindNext As Boolean, ByRef FoundColumn As Long, ByRef FoundRow As Long)
 On Error GoTo ErrorTrap
 Dim Column As Long
+Dim Matched As Boolean
 Dim Row As Long
 Dim StartColumn As Long
 
-   Me.MousePointer = vbHourglass
+   Screen.MousePointer = vbHourglass
    With SearchResultsTable
       .SetFocus
       FoundColumn = -1
@@ -768,22 +791,24 @@ Dim StartColumn As Long
     
       For Row = .Row To .Rows - 1
          For Column = StartColumn To .Cols - 1
-            If Match(UCase$(.TextMatrix(Row, Column)), UCase$(SearchText)) Then
+            Matched = Match(UCase$(.TextMatrix(Row, Column)), UCase$(SearchText))
+            If Matched Then
                FoundColumn = Column
                FoundRow = Row
                .Col = FoundColumn
                .Row = FoundRow
                .TopRow = FoundRow
-               Me.MousePointer = vbDefault
-               Exit Sub
+               Screen.MousePointer = vbDefault
+               Exit For
             End If
          Next Column
+         If Matched Then Exit For
          StartColumn = 0
       Next Row
    End With
    
 EndRoutine:
-   Me.MousePointer = vbDefault
+   Screen.MousePointer = vbDefault
    Exit Sub
    
 ErrorTrap:
@@ -794,9 +819,11 @@ End Sub
 'This procedure gives the command to toggle the exclusion state of the selected window property.
 Private Sub ExcludeMenu_Click(Index As Integer)
 On Error GoTo ErrorTrap
+
    ToggleExcludedProperty CLng(Index)
    
    DisplaySearchResults WindowTextBox.Text, WindowClassBox.Text
+
 EndRoutine:
    Exit Sub
    
@@ -808,7 +835,9 @@ End Sub
 'This procedure gives the command to request the user to specify a search text.
 Private Sub FindNextMatchMenu_Click()
 On Error GoTo ErrorTrap
+
    FindText FindNext:=True
+
 EndRoutine:
    Exit Sub
    
@@ -827,19 +856,20 @@ Static SearchText As String
 
    If (SearchText = vbNullString) Or (Not FindNext) Then
       NewSearchText = InputBox$("Find:", , SearchText)
-      If NewSearchText = vbNullString Then Exit Sub
-      SearchText = NewSearchText
+      If Not NewSearchText = vbNullString Then SearchText = NewSearchText
    End If
    
-   FindInSearchResults SearchText, FindNext, FoundColumn, FoundRow
-   If FoundColumn < 0 And FoundRow < 0 Then
-      If MsgBox("Could not find """ & SearchText & ".""" & vbCrLf & "Search again from start?", vbYesNo Or vbQuestion) = vbYes Then
-         With SearchResultsTable
-            .Col = 0
-            If .Rows > 1 Then .Row = 1 Else .Row = 0
-         End With
-         FindInSearchResults SearchText, FindNext, FoundColumn, FoundRow
-         If FoundColumn < 0 And FoundRow < 0 Then MsgBox "Could not find """ & SearchText & ".""", vbInformation
+   If Not SearchText = vbNullString Then
+      FindInSearchResults SearchText, FindNext, FoundColumn, FoundRow
+      If FoundColumn < 0 And FoundRow < 0 Then
+         If MsgBox("Could not find """ & SearchText & ".""" & vbCrLf & "Search again from start?", vbYesNo Or vbQuestion) = vbYes Then
+            With SearchResultsTable
+               .Col = 0
+               If .Rows > 1 Then .Row = 1 Else .Row = 0
+            End With
+            FindInSearchResults SearchText, FindNext, FoundColumn, FoundRow
+            If FoundColumn < 0 And FoundRow < 0 Then MsgBox "Could not find """ & SearchText & ".""", vbInformation
+         End If
       End If
    End If
    
@@ -855,7 +885,9 @@ End Sub
 'This procedure gives the command to request the user to specify a search text.
 Private Sub FindTextMenu_Click()
 On Error GoTo ErrorTrap
+   
    FindText FindNext:=False
+
 EndRoutine:
    Exit Sub
    
@@ -872,35 +904,34 @@ Dim Flash As Long
 Dim WindowH As Long
 Dim WindowParent As Long
 
-   If Not RefersToWindow(Windows(Index).Handle) Then
-      DisplaySearchResult Index
-      Exit Sub
-   End If
-    
-   WindowH = Windows(Index).Handle
-   Do
-      CheckForError EnableWindow(WindowH, CLng(True))
-      CheckForError ShowWindow(WindowH, SW_SHOWNA)
-      CheckForError BringWindowToTop(WindowH)
-      If CBool(CheckForError(IsIconic(WindowH))) Then CheckForError ShowWindow(WindowH, SW_RESTORE)
+   If RefersToWindow(Windows(Index).Handle) Then
+      WindowH = Windows(Index).Handle
+      Do
+         CheckForError EnableWindow(WindowH, CLng(True))
+         CheckForError ShowWindow(WindowH, SW_SHOWNA)
+         CheckForError BringWindowToTop(WindowH)
+         If CBool(CheckForError(IsIconic(WindowH))) Then CheckForError ShowWindow(WindowH, SW_RESTORE)
+         
+         WindowParent = CheckForError(GetParent(WindowH))
+         If WindowParent = 0 Then Exit Do
+         WindowH = WindowParent
+      Loop
       
-      WindowParent = CheckForError(GetParent(WindowH))
-      If WindowParent = 0 Then Exit Do
-      WindowH = WindowParent
-   Loop
-   
-   Me.MousePointer = vbHourglass
-   CheckForError ShowWindow(Windows(Index).Handle, SW_SHOWNA)
-   For Flash = 0 To 9
-      CheckForError ShowWindow(Windows(Index).Handle, SW_HIDE)
-      DoEvents: Sleep CLng(250)
+      Screen.MousePointer = vbHourglass
       CheckForError ShowWindow(Windows(Index).Handle, SW_SHOWNA)
-      DoEvents: Sleep CLng(250)
-   Next Flash
-   UpdateSearchResults
-   
+      For Flash = 0 To 9
+         CheckForError ShowWindow(Windows(Index).Handle, SW_HIDE)
+         DoEvents: Sleep CLng(250)
+         CheckForError ShowWindow(Windows(Index).Handle, SW_SHOWNA)
+         DoEvents: Sleep CLng(250)
+      Next Flash
+      UpdateSearchResults
+   Else
+      DisplaySearchResult Index
+   End If
+       
 EndRoutine:
-   Me.MousePointer = vbDefault
+   Screen.MousePointer = vbDefault
    Exit Sub
    
 ErrorTrap:
@@ -913,12 +944,12 @@ Private Sub GetBaseClassInformation(Index As Long)
 On Error GoTo ErrorTrap
 Dim WindowH As Long
 
-   If Not RefersToWindow(Windows(Index).Handle) Then
+   If RefersToWindow(Windows(Index).Handle) Then
+      MsgBox "Base class: " & GetWindowBaseClass(Windows(Index).Handle), vbOKOnly Or vbInformation, App.Title
+   Else
       DisplaySearchResult Index
-      Exit Sub
    End If
-
-   MsgBox "Base class: " & GetWindowBaseClass(Windows(Index).Handle), vbOKOnly Or vbInformation, App.Title
+   
 EndRoutine:
    Exit Sub
    
@@ -930,7 +961,9 @@ End Sub
 'This procedure gives the command to flash the selected window.
 Private Sub FlashWindowMenu_Click()
 On Error GoTo ErrorTrap
+   
    FlashWindow Matches(SearchResultsTable.Row - 1)
+
 EndRoutine:
    Exit Sub
    
@@ -942,11 +975,13 @@ End Sub
 'This procedure initializes this window and its interface elements.
 Private Sub Form_Load()
 On Error GoTo ErrorTrap
+   
    Erase Matches()
    
    BuildInterface
    
    SearchForWindows
+
 EndRoutine:
    Exit Sub
    
@@ -976,7 +1011,9 @@ End Sub
 'This procedure gives the command to display the selected window's base class information.
 Private Sub GetBaseClassInformationMenu_Click()
 On Error GoTo ErrorTrap
+   
    GetBaseClassInformation Matches(SearchResultsTable.Row - 1)
+
 EndRoutine:
    Exit Sub
    
@@ -991,21 +1028,21 @@ On Error GoTo ErrorTrap
 Dim Message As String
 Dim WindowProcess As WindowProcessStr
 
-   If Not RefersToWindow(Windows(Index).Handle) Then
+   If RefersToWindow(Windows(Index).Handle) Then
+      WindowProcess = GetWindowProcess(Windows(Index).Handle)
+      
+      With WindowProcess
+         Message = "Process: " & CStr(.ProcessH) & " - " & .ProcessPath & vbCr
+         Message = Message & "Process id: " & CStr(.ProcessId) & vbCr
+         Message = Message & "Thread id: " & CStr(.ThreadId) & vbCr
+         Message = Message & "Module: " & CStr(.ModuleH) & " - " & .ModulePath
+      End With
+      
+      MsgBox Message, vbInformation, App.Title & " - " & CStr(Windows(Index).Handle)
+   Else
       DisplaySearchResult Index
-      Exit Sub
    End If
    
-   WindowProcess = GetWindowProcess(Windows(Index).Handle)
-   
-   With WindowProcess
-      Message = "Process: " & CStr(.ProcessH) & " - " & .ProcessPath & vbCr
-      Message = Message & "Process id: " & CStr(.ProcessId) & vbCr
-      Message = Message & "Thread id: " & CStr(.ThreadId) & vbCr
-      Message = Message & "Module: " & CStr(.ModuleH) & " - " & .ModulePath
-   End With
-   
-   MsgBox Message, vbInformation, App.Title & " - " & CStr(Windows(Index).Handle)
 EndRoutine:
    Exit Sub
    
@@ -1017,7 +1054,9 @@ End Sub
 'This procedure gives the command to display the specified window's process information.
 Private Sub GetProcessInformationMenu_Click()
 On Error GoTo ErrorTrap
+
    GetProcessInformation Matches(SearchResultsTable.Row - 1)
+
 EndRoutine:
    Exit Sub
    
@@ -1052,7 +1091,9 @@ End Sub
 'This procedure displays information about this program.
 Private Sub InformationMenu_Click()
 On Error GoTo ErrorTrap
+   
    MsgBox App.Comments, vbInformation
+
 EndRoutine:
    Exit Sub
    
@@ -1087,6 +1128,7 @@ Dim Result As Boolean
          Result = (InStr(CompareText, SearchText) > 0)
       End If
    End If
+
 EndRoutine:
    Match = Result
    Exit Function
@@ -1100,7 +1142,9 @@ End Function
 'This procedure closes this window.
 Private Sub QuitMenu_Click()
 On Error GoTo ErrorTrap
+   
    Unload Me
+
 EndRoutine:
    Exit Sub
    
@@ -1113,7 +1157,9 @@ End Sub
 'This procedure gives the command to start searching for any active windows that meet the specified search criteria.
 Private Sub SearchButton_Click()
 On Error GoTo ErrorTrap
+   
    SearchForWindows
+
 EndRoutine:
    Exit Sub
    
@@ -1125,7 +1171,8 @@ End Sub
 'This procedure starts searching for any active windows that meet the specified search criteria.
 Private Sub SearchForWindows()
 On Error GoTo ErrorTrap
-   Me.MousePointer = vbHourglass
+   
+   Screen.MousePointer = vbHourglass
    
    CheckForError , ResetSuppression:=True
    ReDim Windows(0 To 0) As WindowStr
@@ -1136,7 +1183,7 @@ On Error GoTo ErrorTrap
    UpdateMenus
    
 EndRoutine:
-   Me.MousePointer = vbDefault
+   Screen.MousePointer = vbDefault
    Exit Sub
    
 ErrorTrap:
@@ -1147,7 +1194,9 @@ End Sub
 'This procedure displays the action menu for the selected window when the user double clicks the search results.
 Private Sub SearchResultsTable_DblClick()
 On Error GoTo ErrorTrap
+   
    If SearchResultsTable.Row > 0 Then PopupMenu WindowMainMenu
+
 EndRoutine:
    Exit Sub
    
@@ -1160,19 +1209,19 @@ End Sub
 Private Sub ShowHideWindow(Index As Long)
 On Error GoTo ErrorTrap
 
-   If Not RefersToWindow(Windows(Index).Handle) Then
+   If RefersToWindow(Windows(Index).Handle) Then
+      If Windows(Index).Visible Then
+         CheckForError ShowWindow(Windows(Index).Handle, SW_HIDE)
+      ElseIf Not Windows(Index).Visible Then
+         CheckForError ShowWindow(Windows(Index).Handle, SW_SHOWNA)
+      End If
+      
+      RefreshWindow Windows(Index).Handle
+      UpdateSearchResults
+   Else
       DisplaySearchResult Index
-      Exit Sub
    End If
-   
-   If Windows(Index).Visible Then
-      CheckForError ShowWindow(Windows(Index).Handle, SW_HIDE)
-   ElseIf Not Windows(Index).Visible Then
-      CheckForError ShowWindow(Windows(Index).Handle, SW_SHOWNA)
-   End If
-   
-   RefreshWindow Windows(Index).Handle
-   UpdateSearchResults
+  
 EndRoutine:
    Exit Sub
    
@@ -1184,7 +1233,9 @@ End Sub
 'This procedure gives the command to update the action menu when a window is selected.
 Private Sub SearchResultsTable_EnterCell()
 On Error GoTo ErrorTrap
+   
    UpdateMenus
+
 EndRoutine:
    Exit Sub
    
@@ -1196,7 +1247,9 @@ End Sub
 'This procedure gives the command to show or hide the selected window.
 Private Sub ShowHideWindowMenu_Click()
 On Error GoTo ErrorTrap
+   
    ShowHideWindow Matches(SearchResultsTable.Row - 1)
+
 EndRoutine:
    Exit Sub
    
@@ -1221,6 +1274,7 @@ Dim OtherIndex As Long
       ExcludeMenu(PropertyIndex).Checked = Not ExcludeMenu(PropertyIndex).Checked
       ExcludeMenu(OtherIndex).Checked = False
    End If
+
 EndRoutine:
    Exit Sub
    
@@ -1247,6 +1301,7 @@ On Error GoTo ErrorTrap
          ShowHideWindowMenu.Caption = ShowHideWindowMenu.Caption & " window."
       End If
    End With
+
 EndRoutine:
    Exit Sub
    
@@ -1263,7 +1318,7 @@ Dim CurrentColumn As Long
 Dim CurrentRow As Long
 Dim Row As Long
 
-   Me.MousePointer = vbHourglass
+   Screen.MousePointer = vbHourglass
    With SearchResultsTable
       CurrentColumn = .Col
       CurrentRow = .Row
@@ -1281,8 +1336,9 @@ Dim Row As Long
      .Col = CurrentColumn
      .Row = CurrentRow
    End With
+
 EndRoutine:
-   Me.MousePointer = vbDefault
+   Screen.MousePointer = vbDefault
    Exit Sub
    
 ErrorTrap:
@@ -1293,7 +1349,9 @@ End Sub
 'This procedure resets the API error message suppression when the user opens the window menu.
 Private Sub WindowMainMenu_Click()
 On Error GoTo ErrorTrap
+   
    CheckForError , ResetSuppression:=True
+
 EndRoutine:
    Exit Sub
    

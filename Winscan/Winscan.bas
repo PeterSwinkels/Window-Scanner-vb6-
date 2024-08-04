@@ -113,12 +113,12 @@ Private Const MAX_STRING As Long = 65535   'Defines the maximum number of charac
 
 'This structure defines the thread, module and process information of a window.
 Public Type WindowProcessStr
-   ModuleH As Long       'Defines the handle of the module that created the window.
-   ModulePath As String  'Defines the path of the module that created the window.
-   ThreadId As Long      'Defines the window's thread id.
-   ProcessH As Long      'Defines the handle of the process to which the window belongs.
-   ProcessId As Long     'Defines the id of the process to which the window belongs.
-   ProcessPath As String 'Defines the path of the process' executable to which the window belongs.
+   ModuleH As Long         'Defines the handle of the module that created the window.
+   ModulePath As String    'Defines the path of the module that created the window.
+   ThreadId As Long        'Defines the window's thread id.
+   ProcessH As Long        'Defines the handle of the process to which the window belongs.
+   ProcessId As Long       'Defines the id of the process to which the window belongs.
+   ProcessPath As String   'Defines the path of the process' executable to which the window belongs.
 End Type
 
 'This structure defines the properties of a window.
@@ -180,6 +180,7 @@ Dim WindowBaseClass As String
    WindowBaseClass = String$(MAX_STRING, vbNullChar)
    Length = CheckForError(RealGetWindowClassA(WindowH, ByVal WindowBaseClass, Len(WindowBaseClass)))
    WindowBaseClass = Left$(WindowBaseClass, Length)
+   
 EndRoutine:
    GetWindowBaseClass = WindowBaseClass
    Exit Function
@@ -201,6 +202,7 @@ Dim WindowClass As String
    WindowClass = String$(MAX_STRING, vbNullChar)
    Length = CheckForError(GetClassNameA(WindowH, ByVal WindowClass, Len(WindowClass)))
    WindowClass = Left$(WindowClass, Length)
+   
 EndRoutine:
    GetWindowClass = WindowClass
    Exit Function
@@ -223,6 +225,7 @@ On Error GoTo ErrorTrap
       .Text = GetWindowText(WindowH)
       .Visible = CBool(CheckForError(IsWindowVisible(WindowH)))
    End With
+   
 EndRoutine:
    Exit Sub
    
@@ -289,6 +292,7 @@ Dim WindowText As String
    End If
    
    WindowText = Left$(WindowText, Length)
+   
 EndRoutine:
    GetWindowText = WindowText
    Exit Function
@@ -301,7 +305,9 @@ End Function
 'This procedure handles any child windows that are found.
 Private Function HandleChildWindows(ByVal hwnd As Long, ByVal lParam As Long) As Long
 On Error GoTo ErrorTrap
+
    GetWindowInformation hwnd
+   
 EndRoutine:
    HandleChildWindows = CLng(True) 'Indicates to continue enumerating child windows.
    Exit Function
@@ -311,18 +317,27 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure handles any errors that occur and notifies the user.
+'This procedure handles any errors that occur.
 Public Sub HandleError()
-   MsgBox "Error: " & CStr(Err.Number) & vbCr & Err.Description, vbExclamation
+Dim Description As String
+Dim ErrorCode As Long
+
+   ErrorCode = Err.Number
+   Description = Err.Description
+   
+   On Error Resume Next
+   MsgBox "Error: " & CStr(ErrorCode) & vbCr & Description, vbExclamation
 End Sub
 
 'This procedure handles any top level windows that are found.
 Public Function HandleWindows(ByVal hwnd As Long, ByVal lParam As Long) As Long
 On Error GoTo ErrorTrap
+   
    GetWindowInformation hwnd
    CheckForError EnumChildWindows(hwnd, AddressOf HandleChildWindows, CLng(0))
+   
 EndRoutine:
-   HandleWindows = CLng(True) 'Indicates to continue enumerating windows.
+   HandleWindows = CLng(True)
    Exit Function
    
 ErrorTrap:
@@ -334,6 +349,7 @@ End Function
 'This procedure is executed when this program is started.
 Private Sub Main()
 On Error GoTo ErrorTrap
+
    CheckForError , ResetSuppression:=True
    ReDim Windows(0 To 0) As WindowStr
    SetDebugPrivilege Disabled:=False
@@ -344,7 +360,7 @@ On Error GoTo ErrorTrap
    Loop
    
    SetDebugPrivilege Disabled:=True
-   End
+   
 EndRoutine:
    Exit Sub
    
@@ -352,6 +368,26 @@ ErrorTrap:
    HandleError
    Resume EndRoutine
 End Sub
+
+
+'This procedure returns information about this program.
+Public Function ProgramInformation() As String
+On Error GoTo ErrorTrap
+Dim Information As String
+
+   With App
+      Information = .Title & " v" & CStr(.Major) & "." & CStr(.Minor) & CStr(.Revision) & " - by: " & App.CompanyName
+   End With
+
+EndRoutine:
+   ProgramInformation = Information
+   Exit Function
+
+ErrorTrap:
+   HandleError
+   Resume EndRoutine
+End Function
+
 
 'This procedure indicates whether the specified handle refers to a window.
 Public Function RefersToWindow(WindowH As Long) As Boolean
@@ -380,11 +416,13 @@ End Function
 'This procedure refreshes the specified window and any parent windows.
 Public Sub RefreshWindow(ByVal WindowH As Long)
 On Error GoTo ErrorTrap
+
    Do
       CheckForError UpdateWindow(WindowH)
       WindowH = CheckForError(GetParent(WindowH))
       DoEvents
    Loop Until WindowH = NO_HANDLE
+   
 EndRoutine:
    Exit Sub
    
@@ -420,6 +458,7 @@ Dim TokenH As Long
       End If
       CheckForError CloseHandle(TokenH)
    End If
+   
 EndRoutine:
    Exit Sub
    
@@ -431,7 +470,9 @@ End Sub
 'This procedure indicates whether a window has the specified style.
 Public Function WindowHasStyle(WindowH As Long, Style As Long) As Boolean
 On Error GoTo ErrorTrap
+
    WindowHasStyle = (CheckForError(GetWindowLongA(WindowH, GWL_STYLE) And Style) = Style)
+
 EndRoutine:
    Exit Function
    
