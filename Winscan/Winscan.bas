@@ -309,7 +309,7 @@ On Error GoTo ErrorTrap
    GetWindowInformation hwnd
    
 EndRoutine:
-   HandleChildWindows = CLng(True) 'Indicates to continue enumerating child windows.
+   HandleChildWindows = CLng(True)
    Exit Function
    
 ErrorTrap:
