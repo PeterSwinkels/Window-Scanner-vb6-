@@ -132,7 +132,7 @@ Public Type WindowStr
 End Type
 
 Public Windows() As WindowStr   'Contains all open windows found.
-'This procedure checks whether an error has occurred during the most recent Windows API call.
+'This procedure checks whether an error has occurred during the most recent Windows API call and returns the specified return value.
 Public Function CheckForError(Optional ReturnValue As Long = 0, Optional ResetSuppression As Boolean = False, Optional Ignored As Long = ERROR_SUCCESS) As Long
 Dim Description As String
 Dim ErrorCode As Long
@@ -302,7 +302,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure handles any child windows that are found.
+'This procedure handles any child windows that are found and returns whether the enumeration should continue..
 Private Function HandleChildWindows(ByVal hwnd As Long, ByVal lParam As Long) As Long
 On Error GoTo ErrorTrap
 
@@ -329,7 +329,7 @@ Dim ErrorCode As Long
    MsgBox "Error: " & CStr(ErrorCode) & vbCr & Description, vbExclamation
 End Sub
 
-'This procedure handles any top level windows that are found.
+'This procedure handles any top level windows that are found and returns whether the enumeration should continue.
 Public Function HandleWindows(ByVal hwnd As Long, ByVal lParam As Long) As Long
 On Error GoTo ErrorTrap
    
@@ -389,7 +389,7 @@ ErrorTrap:
 End Function
 
 
-'This procedure indicates whether the specified handle refers to a window.
+'This procedure checks whether the specified handle refers to a window and returns the result.
 Public Function RefersToWindow(WindowH As Long) As Boolean
 On Error GoTo ErrorTrap
 Dim HIsWindow As Boolean
@@ -467,13 +467,15 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure indicates whether a window has the specified style.
+'This procedure checks whether a window has the specified style and returns the result.
 Public Function WindowHasStyle(WindowH As Long, Style As Long) As Boolean
 On Error GoTo ErrorTrap
+Dim HasStyle As Boolean
 
-   WindowHasStyle = (CheckForError(GetWindowLongA(WindowH, GWL_STYLE) And Style) = Style)
+   HasStyle = (CheckForError(GetWindowLongA(WindowH, GWL_STYLE) And Style) = Style)
 
 EndRoutine:
+   WindowHasStyle = HasStyle
    Exit Function
    
 ErrorTrap:

@@ -1,16 +1,16 @@
 VERSION 5.00
 Object = "{5E9E78A0-531B-11CF-91F6-C2863C385E30}#1.0#0"; "MSFLXGRD.OCX"
 Begin VB.Form WindowScannerWindow 
-   ClientHeight    =   4464
+   ClientHeight    =   4470
    ClientLeft      =   60
-   ClientTop       =   636
-   ClientWidth     =   4692
+   ClientTop       =   630
+   ClientWidth     =   4695
    ClipControls    =   0   'False
    Icon            =   "Winscan.frx":0000
    KeyPreview      =   -1  'True
-   ScaleHeight     =   18.6
+   ScaleHeight     =   18.625
    ScaleMode       =   4  'Character
-   ScaleWidth      =   39.1
+   ScaleWidth      =   39.125
    StartUpPosition =   2  'CenterScreen
    Begin VB.CheckBox IgnoreAmpersandsBox 
       Caption         =   "&Ignore ampersands."
@@ -81,8 +81,8 @@ Begin VB.Form WindowScannerWindow
       ToolTipText     =   "Double click to perform an action on the selected search result."
       Top             =   2160
       Width           =   4335
-      _ExtentX        =   7641
-      _ExtentY        =   3831
+      _ExtentX        =   7646
+      _ExtentY        =   3836
       _Version        =   393216
       Cols            =   4
       FixedCols       =   0
@@ -333,7 +333,7 @@ ErrorTrap:
 End Sub
 
 
-'This procedure checks whether the specified window has an excluded property.
+'This procedure checks whether the specified window has an excluded property and returns the result.
 Private Function IsExcluded(Index As Long) As Boolean
 On Error GoTo ErrorTrap
 Dim Exclusion As ExcludableE
@@ -1102,7 +1102,7 @@ ErrorTrap:
    Resume EndRoutine
 End Sub
 
-'This procedure compares the specified texts using the options selected by the user.
+'This procedure checks whether the specified texts match using the options selected by the user and returns the result.
 Private Function Match(ByVal CompareText As String, ByVal SearchText As String) As Boolean
 On Error GoTo ErrorTrap
 Dim Result As Boolean
