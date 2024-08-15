@@ -106,7 +106,8 @@ Private Declare Function RealGetWindowClassA Lib "User32.dll" (ByVal hwnd As Lon
 Private Declare Function UpdateWindow Lib "User32.dll" (ByVal hwnd As Long) As Long
 Private Declare Function WaitMessage Lib "User32.dll" () As Long
 
-'The constants used by this program.
+'The constants, structures, and variables used by this program.
+
 Public Const NO_HANDLE As Long = 0        'Indicates no handle.
 Private Const MAX_PATH As Long = 260       'Defines the maximum number of characters allowed for a file path.
 Private Const MAX_STRING As Long = 65535   'Defines the maximum number of characters used for a string buffer.
