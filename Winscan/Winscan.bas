@@ -303,7 +303,7 @@ ErrorTrap:
    Resume EndRoutine
 End Function
 
-'This procedure handles any child windows that are found and returns whether the enumeration should continue..
+'This procedure handles any child windows that are found and returns whether the enumeration should continue.
 Private Function HandleChildWindows(ByVal hwnd As Long, ByVal lParam As Long) As Long
 On Error GoTo ErrorTrap
 
