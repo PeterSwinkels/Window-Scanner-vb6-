@@ -75,6 +75,7 @@ Public Declare Function GetDesktopWindow Lib "User32.dll" () As Long
 Public Declare Function GetParent Lib "User32.dll" (ByVal hwnd As Long) As Long
 Public Declare Function GetWindowLongA Lib "User32.dll" (ByVal hwnd As Long, ByVal nIndex As Long) As Long
 Public Declare Function GetWindowRect Lib "User32.dll" (ByVal hwnd As Long, lpRect As RECT) As Long
+Public Declare Function IsHungAppWindow Lib "User32.dll" (ByVal hwnd As Long) As Long
 Public Declare Function IsIconic Lib "User32.dll" (ByVal hwnd As Long) As Long
 Public Declare Function IsWindow Lib "User32.dll" (ByVal hwnd As Long) As Long
 Public Declare Function IsWindowEnabled Lib "User32.dll" (ByVal hwnd As Long) As Long
@@ -277,22 +278,24 @@ Dim Length As Long
 Dim PasswordCharacter As Long
 Dim WindowText As String
 
-   If WindowHasStyle(WindowH, ES_PASSWORD) Then
-      PasswordCharacter = CheckForError(SendMessageW(WindowH, EM_GETPASSWORDCHAR, CLng(0), CLng(0)))
-      If Not PasswordCharacter = 0 Then
-         CheckForError PostMessageA(WindowH, EM_SETPASSWORDCHAR, CLng(0), CLng(0))
-         Sleep CLng(1000)
+   If Not CBool(CheckForError(IsHungAppWindow(WindowH))) Then
+      If WindowHasStyle(WindowH, ES_PASSWORD) Then
+         PasswordCharacter = CheckForError(SendMessageW(WindowH, EM_GETPASSWORDCHAR, CLng(0), CLng(0)))
+         If Not PasswordCharacter = 0 Then
+            CheckForError PostMessageA(WindowH, EM_SETPASSWORDCHAR, CLng(0), CLng(0))
+            Sleep CLng(1000)
+         End If
       End If
+      
+      WindowText = String$(CheckForError(SendMessageW(WindowH, WM_GETTEXTLENGTH, CLng(0), CLng(0))) + 1, vbNullChar)
+      Length = CheckForError(SendMessageW(WindowH, WM_GETTEXT, Len(WindowText), StrPtr(WindowText)))
+      
+      If Not PasswordCharacter = 0 Then
+         CheckForError PostMessageA(WindowH, EM_SETPASSWORDCHAR, PasswordCharacter, CLng(0))
+      End If
+      
+      WindowText = Left$(WindowText, Length)
    End If
-   
-   WindowText = String$(CheckForError(SendMessageW(WindowH, WM_GETTEXTLENGTH, CLng(0), CLng(0))) + 1, vbNullChar)
-   Length = CheckForError(SendMessageW(WindowH, WM_GETTEXT, Len(WindowText), StrPtr(WindowText)))
-   
-   If Not PasswordCharacter = 0 Then
-      CheckForError PostMessageA(WindowH, EM_SETPASSWORDCHAR, PasswordCharacter, CLng(0))
-   End If
-   
-   WindowText = Left$(WindowText, Length)
    
 EndRoutine:
    GetWindowText = WindowText

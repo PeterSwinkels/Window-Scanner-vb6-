@@ -668,6 +668,7 @@ Dim CurrentColumn As Long
             If Windows(Index).Enabled Then .CellForeColor = vbBlack Else .CellForeColor = vbRed
             .CellFontBold = Windows(Index).Visible
             .CellFontItalic = WindowHasStyle(Windows(Index).Handle, ES_PASSWORD)
+            .CellFontUnderline = CBool(CheckForError(IsHungAppWindow(Windows(Index).Handle)))
          ElseIf Not CBool(CheckForError(IsWindow(Windows(Index).Handle))) Then
             .CellBackColor = vbWhite
             .CellForeColor = vbYellow
